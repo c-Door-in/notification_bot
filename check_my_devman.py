@@ -1,5 +1,5 @@
-import json
 import logging
+from textwrap import dedent
 from time import sleep, time
 
 import requests
@@ -49,13 +49,13 @@ def send_notification(tg_bot, tg_chat_id, attempt_results):
     ) if is_negative else (
         'Преподавателю все понравилось, можно приступать к следующему уроку.'
     )
-    text = (
-        f'У вас проверили работу "{lesson_title}".\n' \
-        f'{result_text}\n'\
-        f'Ссылка на вашу работу:\n{lesson_url}'
-    )
+    text = (f'''\
+        У вас проверили работу "{lesson_title}".
+        {result_text}
+        Ссылка на вашу работу:{lesson_url}
+    ''')
     logger.info(f'Sending message to id {tg_chat_id}')
-    tg_bot.send_message(text=text, chat_id=tg_chat_id)
+    tg_bot.send_message(text=dedent(text), chat_id=tg_chat_id)
 
 
 def check_review(url,
