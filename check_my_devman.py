@@ -52,7 +52,8 @@ def send_notification(tg_bot, tg_chat_id, attempt_results):
     text = (f'''\
         У вас проверили работу "{lesson_title}".
         {result_text}
-        Ссылка на вашу работу:{lesson_url}
+        Ссылка на вашу работу:
+        {lesson_url}
     ''')
     logger.info(f'Sending message to id {tg_chat_id}')
     tg_bot.send_message(text=dedent(text), chat_id=tg_chat_id)
