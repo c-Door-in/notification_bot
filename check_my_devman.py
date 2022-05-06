@@ -76,7 +76,7 @@ def check_review(url,
         else:
             logger.info('The status is "{}"'.format(review_response['status']))
             if not review_response['status'] == 'found':
-                timestamp = review_response['last_attempt_timestamp']
+                timestamp = review_response['timestamp_to_request']
                 continue
             send_notification(
                 tg_bot,
