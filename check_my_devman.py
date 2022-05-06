@@ -101,7 +101,7 @@ def main():
     env.read_env()
     devman_token = env.str("DEVMAN_TOKEN")
     tgbot_token=env.str('TGBOT_TOKEN')
-    chat_id = env.str('CHAT_ID')
+    chat_id = env.str('TG_CHAT_ID')
 
     long_polling_url = 'https://dvmn.org/api/long_polling/'
     timeout=5
