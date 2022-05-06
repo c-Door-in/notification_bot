@@ -3,10 +3,9 @@ import logging
 from time import sleep, time
 
 import requests
+import telegram
 from requests.exceptions import ReadTimeout, ConnectionError
 from environs import Env
-
-from bot import send_message
 
 
 logger = logging.getLogger('log')
@@ -51,7 +50,7 @@ def fetch_review_result(url, token, timestamp, timeout):
     return response.json()
 
 
-def send_notification(token, chat_id, attempt_results):
+def send_notification(tg_bot, tg_chat_id, attempt_results):
     for result in attempt_results:
         is_negative = result['is_negative']
         lesson_title = result['lesson_title']
@@ -66,10 +65,16 @@ def send_notification(token, chat_id, attempt_results):
         f'{result_text}\n'\
         f'Ссылка на вашу работу:\n{lesson_url}'
     )
-    send_message(token, chat_id, text)
+    logger.info(f'Sending message to id {tg_chat_id}')
+    tg_bot.send_message(text=text, chat_id=tg_chat_id)
 
 
-def check_review(url, devman_token, timeout, tgbot_token, chat_id, timestamp = time()):
+def check_review(url,
+                 devman_token,
+                 timeout,
+                 tg_bot,
+                 tg_chat_id,
+                 timestamp = time()):
     while True:
         try:
             review_response = fetch_review_result(url, devman_token, timestamp, timeout)
@@ -84,8 +89,8 @@ def check_review(url, devman_token, timeout, tgbot_token, chat_id, timestamp = t
                 timestamp = review_response['last_attempt_timestamp']
                 continue
             send_notification(
-                tgbot_token,
-                chat_id,
+                tg_bot,
+                tg_chat_id,
                 review_response['new_attempts'],
             )
             timestamp = review_response['last_attempt_timestamp']
@@ -99,13 +104,13 @@ def main():
     env = Env()
     env.read_env()
     devman_token = env.str("DEVMAN_TOKEN")
-    tgbot_token=env.str('TGBOT_TOKEN')
-    chat_id = env.str('TG_CHAT_ID')
+    tg_chat_id = env.str('TG_CHAT_ID')
+    tg_bot = telegram.Bot(token=env.str('TGBOT_TOKEN'))
 
     long_polling_url = 'https://dvmn.org/api/long_polling/'
     timeout=5
     logger.info(f'timeout is {timeout}')
-    check_review(long_polling_url, devman_token, timeout, tgbot_token, chat_id)
+    check_review(long_polling_url, devman_token, timeout, tg_bot, tg_chat_id)
 
 
 if __name__ == '__main__':
