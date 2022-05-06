@@ -51,7 +51,11 @@ def fetch_review_result(url, token, timestamp, timeout):
     return response.json()
 
 
-def send_notification(token, chat_id, is_negative, lesson_title, lesson_url):
+def send_notification(token, chat_id, attempt_results):
+    for result in attempt_results:
+        is_negative = result['is_negative']
+        lesson_title = result['lesson_title']
+        lesson_url = result['lesson_url']
     result_text = (
         'К сожалению, в работе нашлись ошибки.'
     ) if is_negative else (
@@ -65,21 +69,6 @@ def send_notification(token, chat_id, is_negative, lesson_title, lesson_url):
     send_message(token, chat_id, text)
 
 
-def check_review_status(review_response, token, chat_id):
-    logger.debug('checking review')
-    if review_response['status'] == 'found':
-        logger.info('The status is "%s"' % review_response['status'])
-        for attempt_result in review_response['new_attempts']:
-            is_negative = attempt_result['is_negative']
-            lesson_title = attempt_result['lesson_title']
-            lesson_url = attempt_result['lesson_url']
-            send_notification(token, chat_id, is_negative, lesson_title, lesson_url)
-        return review_response['last_attempt_timestamp']
-    elif review_response['status'] == 'timeout':
-        logger.debug('The status is "%s"' % review_response['status'])
-        return review_response['timestamp_to_request']
-
-
 def check_review(url, devman_token, timeout, tgbot_token, chat_id, timestamp = time()):
     while True:
         try:
@@ -90,7 +79,17 @@ def check_review(url, devman_token, timeout, tgbot_token, chat_id, timestamp = t
             logger.debug('Exception: %s' % str(e))
             sleep(timeout)
         else:
-            timestamp = check_review_status(review_response, tgbot_token, chat_id)
+            logger.info('The status is "%s"' % review_response['status'])
+            if not review_response['status'] == 'found':
+                timestamp = review_response['last_attempt_timestamp']
+                continue
+            send_notification(
+                tgbot_token,
+                chat_id,
+                review_response['new_attempts'],
+            )
+            timestamp = review_response['last_attempt_timestamp']
+            
 
 
 def main():
