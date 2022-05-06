@@ -27,17 +27,6 @@ def set_logger():
     return logger
 
 
-def fetch_user_reviews(url, token):
-    payload = {
-        'Authorization': f'Token {token}'
-    }
-    response = requests.get(url, headers=payload)
-    response.raise_for_status()
-
-    with open('user_reviews.json', 'w', encoding='utf8') as json_file:
-        json.dump(response.json(), json_file, ensure_ascii=False)
-
-
 def fetch_review_result(url, token, timestamp, timeout):
     logger.debug(f'timestamp = {timestamp}')
     headers_payload = {'Authorization': f'Token {token}'}
@@ -79,12 +68,12 @@ def check_review(url,
         try:
             review_response = fetch_review_result(url, devman_token, timestamp, timeout)
         except ReadTimeout as e:
-            logger.debug('Exception: %s' % str(e))
+            logger.debug('Exception: {}'.format(str(e)))
         except ConnectionError as e:
-            logger.debug('Exception: %s' % str(e))
+            logger.debug('Exception: {}'.format(str(e)))
             sleep(timeout)
         else:
-            logger.info('The status is "%s"' % review_response['status'])
+            logger.info('The status is "{}"'.format(review_response['status']))
             if not review_response['status'] == 'found':
                 timestamp = review_response['last_attempt_timestamp']
                 continue
