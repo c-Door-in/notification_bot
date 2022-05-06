@@ -96,9 +96,9 @@ def main():
     devman_token = env.str("DEVMAN_TOKEN")
     tg_chat_id = env.str('TG_CHAT_ID')
     tg_bot = telegram.Bot(token=env.str('TGBOT_TOKEN'))
+    timeout=env.int('REQUEST_TIMEOUT', None)
 
     long_polling_url = 'https://dvmn.org/api/long_polling/'
-    timeout=5
     logger.info(f'timeout is {timeout}')
     check_review(long_polling_url, devman_token, timeout, tg_bot, tg_chat_id)
 
