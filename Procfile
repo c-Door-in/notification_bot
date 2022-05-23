@@ -1,1 +1,1 @@
-bot: python3 check_my_devman
+bot: python3 check_my_devman.py
