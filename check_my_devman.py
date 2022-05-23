@@ -1,4 +1,5 @@
 import logging
+from logging.handlers import RotatingFileHandler
 from textwrap import dedent
 from time import sleep, time
 
@@ -13,7 +14,7 @@ logger = logging.getLogger('log')
 
 def set_logger():
     logger.setLevel(logging.DEBUG)
-    fh = logging.FileHandler('spam.log')
+    fh = RotatingFileHandler('spam.log', maxBytes=200, backupCount=2)
     fh.setLevel(logging.INFO)
     ch = logging.StreamHandler()
     ch.setLevel(logging.DEBUG)
