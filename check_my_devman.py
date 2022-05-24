@@ -25,9 +25,9 @@ class TelegramLogsHandler(logging.Handler):
 
 
 def set_logger():
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
     fh = RotatingFileHandler('spam.log', maxBytes=200, backupCount=2)
-    fh.setLevel(logging.INFO)
+    fh.setLevel(logging.DEBUG)
     ch = logging.StreamHandler()
     ch.setLevel(logging.DEBUG)
     fmtstr = '%(asctime)s - %(name)s - %(levelname)s - %(funcName)s - %(message)s'
@@ -68,27 +68,48 @@ def send_notification(tg_bot, tg_chat_id, attempt_results):
         Ссылка на вашу работу:
         {lesson_url}
     ''')
-    logger.info(f'Sending message to id {tg_chat_id}')
+    logger.debug(f'Sending message to id {tg_chat_id}')
     tg_bot.send_message(text=dedent(text), chat_id=tg_chat_id)
 
 
-def check_review(url,
-                 devman_token,
-                 timeout,
-                 tg_bot,
-                 tg_chat_id,
-                 timestamp = time()):
+def main():
+    logger = set_logger()
+    logger.warning('Start program')
+
+    env = Env()
+    env.read_env()
+    devman_token = env.str("DEVMAN_TOKEN")
+    tg_chat_id = env.str('TG_CHAT_ID')
+    tg_bot = telegram.Bot(token=env.str('TGBOT_TOKEN'))
+    tg_logs_handler = TelegramLogsHandler(tg_bot, tg_chat_id)
+    tg_logs_handler.setLevel(logging.WARNING)
+    logger.addHandler(tg_logs_handler)
+
+    timeout=env.int('REQUEST_TIMEOUT', 5)
+    logger.info(f'timeout is {timeout}')
+
+    long_polling_url = 'https://dvmn.org/api/long_polling/'
+    
+    timestamp = time()
+    logger.warning('Начало работы')
     while True:
         try:
-            review_response = fetch_review_result(url, devman_token, timestamp, timeout)
-        except ReadTimeout as e:
-            logger.debug('Exception: {}'.format(str(e)))
-        except ConnectionError as e:
-            logger.debug('Exception: {}'.format(str(e)))
+            review_response = fetch_review_result(long_polling_url,
+                                                  devman_token,
+                                                  timestamp,
+                                                  timeout)
+        except ReadTimeout as err:
+            logger.debug(err, exc_info=True)
+        except ConnectionError as err:
+            logger.warning(err, exc_info=True)
+            sleep(timeout)
+        except Exception:
+            logger.exception('Непредвиденная ошибка')
             sleep(timeout)
         else:
-            logger.info('The status is "{}"'.format(review_response['status']))
-            if not review_response['status'] == 'found':
+            status = review_response['status']
+            logger.debug(f'The status is "{status}"')
+            if not status == 'found':
                 timestamp = review_response['timestamp_to_request']
                 continue
             send_notification(
@@ -97,25 +118,6 @@ def check_review(url,
                 review_response['new_attempts'],
             )
             timestamp = review_response['last_attempt_timestamp']
-            
-
-
-def main():
-    logger = set_logger()
-    logger.info('Start program')
-
-    env = Env()
-    env.read_env()
-    devman_token = env.str("DEVMAN_TOKEN")
-    tg_chat_id = env.str('TG_CHAT_ID')
-    tg_bot = telegram.Bot(token=env.str('TGBOT_TOKEN'))
-    timeout=env.int('REQUEST_TIMEOUT', None)
-
-    logger.addHandler(TelegramLogsHandler(tg_bot, tg_chat_id))
-
-    long_polling_url = 'https://dvmn.org/api/long_polling/'
-    logger.info(f'timeout is {timeout}')
-    check_review(long_polling_url, devman_token, timeout, tg_bot, tg_chat_id)
 
 
 if __name__ == '__main__':
