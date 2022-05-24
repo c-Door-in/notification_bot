@@ -25,7 +25,7 @@ class TelegramLogsHandler(logging.Handler):
 
 
 def set_logger():
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
     fh = RotatingFileHandler('spam.log', maxBytes=200, backupCount=2)
     fh.setLevel(logging.DEBUG)
     ch = logging.StreamHandler()
@@ -85,7 +85,7 @@ def main():
     tg_logs_handler.setLevel(logging.WARNING)
     logger.addHandler(tg_logs_handler)
 
-    timeout=env.int('REQUEST_TIMEOUT', 5)
+    timeout=env.int('REQUEST_TIMEOUT', None)
     logger.info(f'timeout is {timeout}')
 
     long_polling_url = 'https://dvmn.org/api/long_polling/'
@@ -99,13 +99,13 @@ def main():
                                                   timestamp,
                                                   timeout)
         except ReadTimeout as err:
-            logger.debug(err, exc_info=True)
+            logger.debug(err)
         except ConnectionError as err:
-            logger.warning(err, exc_info=True)
-            sleep(timeout)
+            logger.info(err)
+            sleep(5)
         except Exception:
-            logger.exception('Непредвиденная ошибка')
-            sleep(timeout)
+            logger.exception('Непредвиденная ошибка. Новая попытка через 60 секунд')
+            sleep(60)
         else:
             status = review_response['status']
             logger.debug(f'The status is "{status}"')
