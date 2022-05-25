@@ -24,22 +24,6 @@ class TelegramLogsHandler(logging.Handler):
         self.tg_bot.send_message(chat_id=self.chat_id, text=log_entry)
 
 
-def set_logger():
-    logger.setLevel(logging.DEBUG)
-    fh = RotatingFileHandler('spam.log', maxBytes=200, backupCount=2)
-    fh.setLevel(logging.DEBUG)
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
-    fmtstr = '%(asctime)s - %(name)s - %(levelname)s - %(funcName)s - %(message)s'
-    fmtdate = '%H:%M:%S'
-    formater = logging.Formatter(fmtstr, fmtdate)
-    fh.setFormatter(formater)
-    ch.setFormatter(formater)
-    logger.addHandler(fh)
-    logger.addHandler(ch)
-    return logger
-
-
 def fetch_review_result(url, token, timestamp, timeout):
     logger.debug(f'timestamp = {timestamp}')
     headers_payload = {'Authorization': f'Token {token}'}
@@ -73,7 +57,18 @@ def send_notification(tg_bot, tg_chat_id, attempt_results):
 
 
 def main():
-    logger = set_logger()
+    logger.setLevel(logging.DEBUG)
+    fh = RotatingFileHandler('spam.log', maxBytes=200, backupCount=2)
+    fh.setLevel(logging.DEBUG)
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    fmtstr = '%(asctime)s - %(name)s - %(levelname)s - %(funcName)s - %(message)s'
+    fmtdate = '%H:%M:%S'
+    formater = logging.Formatter(fmtstr, fmtdate)
+    fh.setFormatter(formater)
+    ch.setFormatter(formater)
+    logger.addHandler(fh)
+    logger.addHandler(ch)
     logger.warning('Start program')
 
     env = Env()
