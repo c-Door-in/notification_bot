@@ -41,19 +41,19 @@ def send_notification(tg_bot, tg_chat_id, attempt_results):
         is_negative = result['is_negative']
         lesson_title = result['lesson_title']
         lesson_url = result['lesson_url']
-    result_text = (
-        'К сожалению, в работе нашлись ошибки.'
-    ) if is_negative else (
-        'Преподавателю все понравилось, можно приступать к следующему уроку.'
-    )
-    text = (f'''\
-        У вас проверили работу "{lesson_title}".
-        {result_text}
-        Ссылка на вашу работу:
-        {lesson_url}
-    ''')
-    logger.debug(f'Sending message to id {tg_chat_id}')
-    tg_bot.send_message(text=dedent(text), chat_id=tg_chat_id)
+        result_text = (
+            'К сожалению, в работе нашлись ошибки.'
+        ) if is_negative else (
+            'Преподавателю все понравилось, можно приступать к следующему уроку.'
+        )
+        text = (f'''\
+            У вас проверили работу "{lesson_title}".
+            {result_text}
+            Ссылка на вашу работу:
+            {lesson_url}
+        ''')
+        logger.debug(f'Sending message to id {tg_chat_id}')
+        tg_bot.send_message(text=dedent(text), chat_id=tg_chat_id)
 
 
 def main():
